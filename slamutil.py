@@ -1,7 +1,16 @@
 import math
 import numpy
 
+## Class that simulates a four-wheeled vehicle with Ackerman steering.
 class AckermanVehicle:
+  ## Constructor.  Requires specifying intrinsic knowledge of vehicle.
+  # @param _L Distance between front and rear axles.
+  # @param _h Distance between center of rear axle and encoder.
+  # @param _b Vertical distance from rear axle to laser.
+  # @param _a Horizontal distance from rear axle to laser.
+  # @param _init_state Initial position and heading.
+  # @param _init_Ve Initial forward (or backward) velocity.
+  # @param _init_steer_a Initial steering angle.
   def __init__(self,_L,_h,_b,_a,_init_state,_init_Ve,_init_steer_a):
     self.L = _L
     self.h = _h
@@ -12,6 +21,8 @@ class AckermanVehicle:
     self.steer_a = _init_steer_a
     self.Vc = self.measuredToVehicleCenter()
 
+  ## Plants a new state into the simulator.  Useful for resetting.
+  # @param newState The new state variable that replaces self.state.
   def plantState(self,newState):
     self.state = newState
 
