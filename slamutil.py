@@ -26,6 +26,8 @@ class AckermanVehicle:
   def plantState(self,newState):
     self.state = newState
 
+  ## Updates the state vector with a prediction of motion for the past timestep.
+  # @param dt The amount of time (in seconds) that have elapsed.
   def predict(self,dt):
     phi = self.state[2,0]
     self.state = numpy.array([
@@ -48,6 +50,10 @@ class AckermanVehicle:
     self.steer_a = _steer_a
     self.Vc = self.measuredToVehicleCenter()
 
+## Calculates the distance between points a and b (vectors).
+# @param a The first point as an array of two floats.
+# @param b The second point as an array of two floats.
+# @return The distance (float) between a and b.
 def DistanceFormula(a,b):
   return math.sqrt((a[0]-b[0])*(a[0]-b[0])+(a[1]-b[1])*(a[1]-b[1]))
 
