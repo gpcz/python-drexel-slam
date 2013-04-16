@@ -29,17 +29,31 @@ class AckermanVehicle:
   ## Updates the state vector with a prediction of motion for the past timestep.
   # @param dt The amount of time (in seconds) that have elapsed.
   def predict(self,dt):
+    L = self.L
+    steer_a = self.steer_a
     phi = self.state[2,0]
+    Vc = self.Vc
+    a = self.a
+    b = self.b
+    x = self.state[0,0]
+    y = self.state[1,0]
+    ad = dt*Vc/L*math.tan(steer_a) # Angular velocity times dt -- angular dist.
     self.state = numpy.array([
-        [self.state[0,0] + dt*self.Vc*math.cos(phi)-dt*self.Vc/self.L*math.tan(self.steer_a)*(self.a*math.sin(phi)+self.b*math.cos(phi))],
-        [self.state[1,0] + dt*self.Vc*math.sin(phi)+dt*self.Vc/self.L*math.tan(self.steer_a)*(self.a*math.cos(phi)-self.b*math.sin(phi))],
-        [NormalizeAngle(phi + dt*self.Vc/self.L*math.tan(self.steer_a))]])
+        [x + dt*Vc*math.cos(phi)-ad*(a*math.sin(phi)+b*math.cos(phi))],
+        [y + dt*Vc*math.sin(phi)+ad*(a*math.cos(phi)-b*math.sin(phi))],
+        [NormalizeAngle(phi + ad)]])
 
   def jacobian(self,dt,numLandmarks):
     phi = self.state[2,0]
+    L = self.L
+    steer_a = self.steer_a
+    Vc = self.Vc
+    a = self.a
+    b = self.b
+    ad = dt*Vc/L*math.tan(steer_a) # Angular velocity times dt -- angular dist.
     result = numpy.identity(3+numLandmarks*2)
-    result[0,2] = -dt*self.Vc*math.sin(phi)-dt*self.Vc/self.L*math.tan(self.steer_a)*(self.a*math.cos(phi)-self.b*math.sin(phi))
-    result[1,2] = dt*self.Vc*math.cos(phi)-dt*self.Vc/self.L*math.tan(self.steer_a)*(self.a*math.sin(phi)+self.b*math.cos(phi))
+    result[0,2] = -dt*Vc*math.sin(phi)-ad*(a*math.cos(phi)-b*math.sin(phi))
+    result[1,2] =  dt*Vc*math.cos(phi)-ad*(a*math.sin(phi)+b*math.cos(phi))
     return result
 
   def measuredToVehicleCenter(self):
@@ -101,13 +115,11 @@ def MakeScatterplotArrays(result):
   return [Xs,Ys]
 
 def MakeLandmarkArray(result):
-  #print result.shape[0]
   numMarks = (result.shape[0]-3)/2
+  shape1 = result.shape[1]
   output = []
   for i in range(numMarks):
-    #print "i: " + str(i)
-    output.append([result[i*2+3,result.shape[1]-1],result[i*2+4,result.shape[1]-1]])
-#  print output
+    output.append([result[i*2+3,shape1-1],result[i*2+4,shape1-1]])
   return output
 
 def TackOnNewZeroRows(mat,num):
@@ -155,6 +167,7 @@ def FindGlobalLaserCoord(v_state,r,bearing):
   laserBear = phi+bearing-math.pi/2.0
   return [v_state[0]+r*math.cos(laserBear),v_state[1]+r*math.sin(laserBear)]
 
+################################################################################
 def ClumpsToRangeBearing(clumps):
   ranges = []
   bearings = []
@@ -162,7 +175,7 @@ def ClumpsToRangeBearing(clumps):
     theRange = float(sum(i[1]))/float(len(i[1]))
     if theRange < 15.0:
       ranges.append(theRange)
-      bearings.append(( float(float(i[0])/2+ (float(len(i[1]))*0.5)/2) )*math.pi/180.0)
+      bearings.append(float(float(i[0])/2.0+float(len(i[1]))/4.0)*math.pi/180.0)
   return [ranges,bearings]
 
 def FindClumps(laser,intensity):

@@ -18,9 +18,12 @@ L=2.83; # distance between front and rear axles
 h=0.76; # distance between center of rear axle and encoder
 b=0.5;  # vertical distance from rear axle to laser
 a=3.78; # horizontal distance from rear axle to laser
-init_est = numpy.ndarray(shape=(3,1), buffer=numpy.array([[float(dataset['GPSLon'][0][0])],
-                        [float(dataset['GPSLat'][0][0])],
-                        [-126.0*math.pi/180.0]]))
+startLong = dataset['GPSLon'][0][0]
+startLat = dataset['GPSLat'][0][0]
+PI = math.pi
+init_est = numpy.ndarray(shape=(3,1), buffer=numpy.array([[float(startLong)],
+                                                          [float(startLat)],
+                                                          [-126.0*PI/180.0]]))
 
 # The dataset starts doing weird things, so we stop the simulation before
 # the end.
@@ -54,21 +57,25 @@ def DeadReckoning(dataset):
   return result
 
 def EKFUpdate(state,Pest,markID,z):
+  subt = numpy.subtract
+  ndot = numpy.dot
   state = numpy.transpose(numpy.matrix(state))
   Jh = ObservationJacobian(state,markID)
+  Jht = numpy.transpose(Jh)
   dx = state[markID*2+3,0]-state[0,0]
   dy = state[markID*2+4,0]-state[1,0]
   r = math.sqrt(dx*dx+dy*dy)
-  H = [[r],[math.atan2(dy,dx)-state[2,0]+math.pi/2.0]]
+  H = [[r],[math.atan2(dy,dx)-state[2,0]+PI/2.0]]
   inno = numpy.subtract(z,H)
   inno[1,0] = NormalizeAngle(inno[1,0])
   V = numpy.identity(2)
-  R = numpy.array([[0.1, 0],[0, (math.pi/180.0)*(math.pi/180.0)]])
-  S = numpy.dot(Jh,numpy.dot(Pest,numpy.transpose(Jh)))+numpy.dot(V,numpy.dot(R,numpy.transpose(V)))
+  Vt = numpy.transpose(V)
+  R = numpy.array([[0.1, 0],[0, (PI/180.0)*(PI/180.0)]])
+  S = numpy.dot(Jh,numpy.dot(Pest,Jht))+numpy.dot(V,numpy.dot(R,Vt))
   K = numpy.dot(Pest,numpy.dot(numpy.transpose(Jh),numpy.linalg.inv(S)))
   wtf = numpy.dot(K,inno)
   state = state + wtf
-  Pest = numpy.matrix(numpy.dot(numpy.subtract(numpy.identity(K.shape[0]),numpy.dot(K,Jh)),Pest))
+  Pest = numpy.matrix(ndot(subt(numpy.identity(K.shape[0]),ndot(K,Jh)),Pest))
   return [state,Pest]
 
 def SLAM(dataset):
@@ -78,7 +85,7 @@ def SLAM(dataset):
   laserRet = MakeArrayIterator(dataset['Laser'])
   intensityRet = MakeArrayIterator(dataset['Intensity'])
   vehicleModel = AckermanVehicle(L,h,b,a,init_est,velRet(),steerRet())
-  factor = (15.0*math.pi/180.0)
+  factor = (15.0*PI/180.0)
   Pest = numpy.array([[0.01,0,0],[0,0.01,0],[0,0,factor]])
   Q = numpy.array([[0.5,0.0,0.0],[0,0.5,0.0],[0.0,0.0,factor*factor]])
   W = numpy.array([[1,0,0],[0,1,0],[0,0,1]])
@@ -93,7 +100,9 @@ def SLAM(dataset):
     result[:,i] = result[:,i-1]
     result[0:3,i] = vehicleModel.state[0:3,0]
     A = vehicleModel.jacobian(dt,(result.shape[0]-3)/2)
-    Pest = numpy.dot(A,numpy.dot(Pest,numpy.transpose(A)))-numpy.dot(W,numpy.dot(Q,numpy.transpose(W)))
+    At = numpy.transpose(A)
+    Wt = numpy.transpose(W)
+    Pest = numpy.dot(A,numpy.dot(Pest,At))-numpy.dot(W,numpy.dot(Q,Wt))
     if dataset['Sensor'][0][i] == MOVEMENT_FRAME:
       vehicleModel.new_steering(velRet(),steerRet())
     if dataset['Sensor'][0][i] == LASER_FRAME:
@@ -103,15 +112,28 @@ def SLAM(dataset):
       if len(clumps) > 0:
         [clumpRange,clumpBearings] = ClumpsToRangeBearing(clumps)
         for count in range(len(clumpRange)):
-          closest = FindClosestLandmark(result[0:3,i],clumpRange[count],clumpBearings[count],MakeLandmarkArray(result))
-          landmark = FindGlobalLaserCoord(result[0:3,i],clumpRange[count],clumpBearings[count])
+          closest = FindClosestLandmark(result[0:3,i],
+                                        clumpRange[count],
+                                        clumpBearings[count],
+                                        MakeLandmarkArray(result))
+          landmark = FindGlobalLaserCoord(result[0:3,i],
+                                          clumpRange[count],
+                                          clumpBearings[count])
           if closest != False:
             [closeDist,theAddr] = closest
             if closeDist > 2.0:
-              [result,Pest,theAddr,Q,W] = AddNewLandmark(result,Pest,landmark,Q,W)
+              [result,Pest,theAddr,Q,W] = AddNewLandmark(result,
+                                                         Pest,
+                                                         landmark,Q,W)
           else:
-            [result,Pest,theAddr,Q,W] = AddNewLandmark(result,Pest,landmark,Q,W)
-          [newState,Pest] = EKFUpdate(result[:,i],Pest,theAddr,numpy.array([[clumpRange[count]],[clumpBearings[count]]]))
+            [result,Pest,theAddr,Q,W] = AddNewLandmark(result,
+                                                       Pest,
+                                                       landmark,Q,W)
+          [newState,Pest] = EKFUpdate(result[:,i],
+                                      Pest,
+                                      theAddr,
+                                      numpy.array([[clumpRange[count]],
+                                                   [clumpBearings[count]]]))
           result[:,i] = numpy.transpose(newState[:,0])
           vehicleModel.plantState(newState[0:3,0])
   return result
