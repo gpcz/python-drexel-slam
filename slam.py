@@ -45,6 +45,11 @@ def TruePath(dataset):
       result = numpy.append(result,[[longitudeRet()],[latitudeRet()]],1)
   return result
 
+##
+# This computes an array of points that correspond to blind dead reckoning.
+#
+# @param dataset The Matlab data set in question.
+# @return An array of points corresponding to dead reckoning movement.
 def DeadReckoning(dataset):
   dtRet = MakeArrayDiffIterator(dataset['Time'][0])
   velRet = MakeArrayIterator(dataset['Velocity'][0])
