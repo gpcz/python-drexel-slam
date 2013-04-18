@@ -29,6 +29,11 @@ init_est = numpy.ndarray(shape=(3,1), buffer=numpy.array([[float(startLong)],
 # the end.
 timeLimit = 100;
 
+##
+# This computes an array of points that correspond to the robot's true path.
+#
+# @param dataset The Matlab data set in question.
+# @return An array of points corresponding to true positions (from DGPS).
 def TruePath(dataset):
   result = numpy.array([[],[]])
   longitudeRet = MakeArrayIterator(dataset['GPSLon'][0])
