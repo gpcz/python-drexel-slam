@@ -66,6 +66,15 @@ def DeadReckoning(dataset):
       vehicleModel.new_steering(velRet(),steerRet())
   return result
 
+##
+# This computes a new state and probability estimate for the robot using the
+# Extended Kalman Filter (EKF).
+#
+# @param state The current state vector.
+# @param Pest The current probability vector.
+# @param markID The ID of the observed landmark.
+# @param z The observation vector.
+# @return A vector containing a new state vector and a new probability vector.
 def EKFUpdate(state,Pest,markID,z):
   subt = numpy.subtract
   ndot = numpy.dot
