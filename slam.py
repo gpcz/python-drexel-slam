@@ -97,6 +97,12 @@ def EKFUpdate(state,Pest,markID,z):
   Pest = numpy.matrix(ndot(subt(numpy.identity(K.shape[0]),ndot(K,Jh)),Pest))
   return [state,Pest]
 
+##
+# Performs EKF-SLAM on the dataset and returns an array of points corresponding
+# to the best guess of where the robot is for a given point in time.
+#
+# @param dataset The Matlab dataset.
+# @return An array of points corresponding to the robot's location and heading.
 def SLAM(dataset):
   dtRet = MakeArrayDiffIterator(dataset['Time'][0])
   velRet = MakeArrayIterator(dataset['Velocity'][0])
