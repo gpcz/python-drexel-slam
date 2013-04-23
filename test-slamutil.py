@@ -2,6 +2,8 @@ import unittest
 import math
 from slamutil import *
 
+##
+# Tests the Slam Utility Functions, which are used all over the EKF-SLAM system.
 class TestSlamUtilFuncs(unittest.TestCase):
   def setUp(self):
     pass
