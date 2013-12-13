@@ -1,0 +1,15 @@
+I mainly wrote this code to learn how to implement Simultaneous Localization And 
+Mapping (SLAM) using Extended Kalman Filters, and I only put it online in case
+someone else could benefit from what was a quick pet project of mine.
+
+It's basically a direct port of the Homework 4 Matlab code written by Drexel
+University at http://prism2.mem.drexel.edu/~billgreen/slam/slam.html , and 
+there are now way better algorithms for solving the SLAM problem than 
+Extended Kalman Filters, so I place this Python code in the public domain.
+
+If you want to learn modern SLAM, please take Prof. Olson's EECS 568 course
+at the University of Michigan or review all the course materials online at
+http://april.eecs.umich.edu/courses/eecs568_f12/wiki/index.php/Main_Page .
+
+Greg Czerniak
+greg@czerniak.info
