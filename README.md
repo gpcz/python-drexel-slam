@@ -1,7 +1,7 @@
 python-drexel-slam
 ==================
 
-This code implements the final homework from Drexel University's online Simultaneous Localization and Mapping (SLAM) lectures ( http://prism2.mem.drexel.edu/~billgreen/slam/slam.html ).  It uses an Extended Kalman Filter for implementation, which still has educational value despite not being the current state of the art in SLAM.
+This code implements the final homework from Drexel University's online Simultaneous Localization and Mapping (SLAM) lectures ( http://dasl.mem.drexel.edu/~billgreen/slam/slam.html ).  It uses an Extended Kalman Filter for implementation, which still has educational value despite not being the current state of the art in SLAM.
 
 Dependencies: Scipy/Matplotlib
 
